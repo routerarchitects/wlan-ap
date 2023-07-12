@@ -21,10 +21,8 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
  drivers/net/wireless/ath/ath11k/wmi.c     |  49 ++++++++++++-
  6 files changed, 229 insertions(+), 95 deletions(-)
 
-Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/core.c
-===================================================================
---- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.c
-+++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/core.c
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
 @@ -425,6 +425,55 @@ static const struct ath11k_num_vdevs_pee
  	},
  };
@@ -81,10 +79,8 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/c
  int ath11k_core_suspend(struct ath11k_base *ab)
  {
  	int ret;
-Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/core.h
-===================================================================
---- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.h
-+++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/core.h
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
 @@ -527,8 +527,6 @@ struct ath11k_debug {
  	struct ath11k_dbg_htt_stats htt_stats;
  	u32 extd_tx_stats;
@@ -94,10 +90,10 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/c
  	u32 extd_rx_stats;
  	u32 pktlog_filter;
  	u32 pktlog_mode;
-@@ -759,6 +757,11 @@ struct ath11k {
- 	u8 cfr_enabled;
- 	bool ani_enabled;
- 	enum wmi_phy_mode cfr_phymode;
+@@ -764,6 +762,11 @@ struct ath11k {
+ 	struct cfg80211_chan_def awgn_chandef;
+ 	u32 chan_bw_interference_bitmap;
+ 	bool awgn_intf_handling_in_prog;
 +
 +	/* fw pdev_stats can be requested by get_txpower mac ops too */
 +	struct list_head fw_stats_pdevs;
@@ -106,7 +102,7 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/c
  };
  
  struct ath11k_band_cap {
-@@ -1188,6 +1191,12 @@ enum ath11k_fw_recovery_option {
+@@ -1193,6 +1196,12 @@ enum ath11k_fw_recovery_option {
  	ATH11K_FW_RECOVERY_ENABLE_SSR_ONLY,
  };
  
@@ -119,10 +115,8 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/c
  extern const struct ce_pipe_config ath11k_target_ce_config_wlan_ipq8074[];
  extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq8074[];
  extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq6018[];
-Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.c
-===================================================================
---- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs.c
-+++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.c
+--- a/drivers/net/wireless/ath/ath11k/debugfs.c
++++ b/drivers/net/wireless/ath/ath11k/debugfs.c
 @@ -650,86 +650,29 @@ void ath11k_debug_aggr_size_config_init(
  			    &fops_amsdu_aggr_size);
  }
@@ -313,10 +307,8 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/d
  }
  
  static ssize_t ath11k_write_pktlog_filter(struct file *file,
-Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.h
-===================================================================
---- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs.h
-+++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.h
+--- a/drivers/net/wireless/ath/ath11k/debugfs.h
++++ b/drivers/net/wireless/ath/ath11k/debugfs.h
 @@ -231,7 +231,7 @@ int ath11k_debugfs_pdev_create(struct at
  void ath11k_debugfs_pdev_destroy(struct ath11k_base *ab);
  int ath11k_debugfs_register(struct ath11k *ar);
@@ -337,11 +329,9 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/d
  {
  }
  
-Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
-===================================================================
---- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/mac.c
-+++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
-@@ -8850,6 +8850,96 @@ out:
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -8969,6 +8969,96 @@ out:
  	return ret;
  }
  
@@ -438,7 +428,7 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/m
  static const struct ieee80211_ops ath11k_ops = {
  	.tx				= ath11k_mac_op_tx,
  	.start                          = ath11k_mac_op_start,
-@@ -8892,6 +8982,7 @@ static const struct ieee80211_ops ath11k
+@@ -9011,6 +9101,7 @@ static const struct ieee80211_ops ath11k
  #ifdef CPTCFG_MAC80211_MESH
  	.config_mesh_offload_path	= ath11k_mac_op_config_mesh_offload_path,
  #endif
@@ -446,7 +436,7 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/m
  };
  
  static void ath11k_mac_update_ch_list(struct ath11k *ar,
-@@ -9562,6 +9653,8 @@ int ath11k_mac_allocate(struct ath11k_ba
+@@ -9681,6 +9772,8 @@ int ath11k_mac_allocate(struct ath11k_ba
  		ar->monitor_vdev_id = -1;
  		ar->monitor_vdev_created = false;
  		ar->monitor_started = false;
@@ -455,10 +445,8 @@ Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/m
  	}
  
  	return 0;
-Index: backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/wmi.c
-===================================================================
---- backports-20210222_001-4.4.60-b157d2276.orig/drivers/net/wireless/ath/ath11k/wmi.c
-+++ backports-20210222_001-4.4.60-b157d2276/drivers/net/wireless/ath/ath11k/wmi.c
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
 @@ -7063,7 +7063,7 @@ void ath11k_wmi_fw_stats_fill(struct ath
  	spin_lock_bh(&ar->data_lock);
  
