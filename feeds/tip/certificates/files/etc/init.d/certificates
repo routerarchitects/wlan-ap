@@ -16,7 +16,6 @@ copy_certificates() {
 }
 
 boot() {
-	[ -f /etc/ucentral/dev-id ] && return
 	. /lib/functions.sh
 	mkdir -p /certificates /etc/ucentral/
 	local mtd=$(find_mtd_index certificates)
@@ -38,7 +37,9 @@ boot() {
 		;;
 	esac
 
+	[ -f /certificates/dev-id -a -f /etc/ucentral/dev-id ] && exit 0 
 	copy_certificates
+
 
 	# if we get here no valid certificates were found
 
@@ -89,5 +90,6 @@ boot() {
 
 	ubiattach -m $MTD -d 3
 	[ -e /dev/ubi3 ] && mount -t ubifs ubi3:certificates /certificates
+	[ -f /etc/ucentral/dev-id ] && exit 0 
 	copy_certificates
 }
