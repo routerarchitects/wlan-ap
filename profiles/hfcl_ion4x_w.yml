@@ -6,10 +6,13 @@ image: bin/targets/ipq807x/ipq50xx/openwrt-ipq807x-hfcl_ion4x_w-squashfs-sysupgr
 feeds:
   - name: ipq807x
     path: ../../feeds/ipq807x
+  - name: hfcl
+    path: ../../feeds/hfcl
 include:
   - wifi-ax
   - ucentral-ap
 packages:
   - ipq807x
+  - hfcl
 diffconfig: |
   CONFIG_KERNEL_IPQ_MEM_PROFILE=512

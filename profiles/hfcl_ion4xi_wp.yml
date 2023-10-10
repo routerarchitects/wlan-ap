@@ -7,8 +7,11 @@ image: bin/targets/ipq807x/ipq60xx/openwrt-ipq807x-hfcl_ion4xi_wp-squashfs-sysup
 feeds:
   - name: ipq807x
     path: ../../feeds/ipq807x
+  - name: hfcl
+    path: ../../feeds/hfcl
 packages:
   - ipq807x
+  - hfcl
 include:
   - wifi-ax
   - ucentral-ap
