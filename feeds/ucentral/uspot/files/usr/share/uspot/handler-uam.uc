@@ -54,6 +54,7 @@ global.handle_request = function(env) {
 
 	switch (split(ctx.env.REQUEST_URI, '?')[0] || '') {
 	case '/logon':
+	case '/login':
 		auth_client(ctx);
 		break;
 	case '/logout':
