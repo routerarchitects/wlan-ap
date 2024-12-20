@@ -1,0 +1,18 @@
+---
+profile: glinet_gl-mt3000
+target: mediatek
+subtarget: filogic
+description: Build image for the GL.iNet MT3000
+image: bin/targets/ipq50xx/generic/openwrt-mediatek-filogic-glinet_gl-mt3000-squashfs-sysupgrade.tar
+
+include:
+  - ucentral-ap
+  - hostapd
+
+packages:
+  - ucode
+  - ucode-mod-math
+  - ucode-mod-resolv
+  - ucode-mod-rtnl
+  - ucode-mod-struct
+  - ucode-mod-uci
