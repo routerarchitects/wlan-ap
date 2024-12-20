@@ -1,0 +1,28 @@
+---
+profile: glinet_gl-mt6000
+target: mediatek
+subtarget: filogic
+description: Build image for the GL.iNet mt6000
+image: bin/targets/mediatek/filogic/openwrt-mediatek-glinet_gl-mt6000-squashfs-sysupgrade.tar
+feeds:
+  - name: ucentral
+    path: ../../feeds/ucentral
+
+include:
+  - ucentral-ap
+
+packages:
+  - ucode
+  - ucode-mod-math
+  - ucode-mod-resolv
+  - ucode-mod-rtnl
+  - ucode-mod-struct
+  - ucode-mod-uci
+  - wpad-openssl
+  - wireless-regdb
+  - iptables-mod-physdev
+
+diffconfig: |
+  CONFIG_NET_IP_TUNNEL=y
+  CONFIG_KERNEL_IPQ_MEM_PROFILE=512
+  CONFIG_BUSYBOX_CUSTOM=y
